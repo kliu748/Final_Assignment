@@ -1,26 +1,45 @@
-<?php 
+<?php
 $database = new Database();
   $db = $database->connect();
 
- 
+
   $post = new Post($db);
 
  
-  $data = json_decode(file_get_contents("php://input"));
-
-  $post->title = $data->title;
-  $post->body = $data->body;
-  $post->author = $data->author;
-  $post->category_id = $data->category_id;
+  $result = $post->read();
+ 
+  $num = $result->rowCount();
 
  
-  if($post->create()) {
-    echo json_encode(
-      array('message' => 'Post Created')
-    );
+  if($num > 0) {
+   
+    $posts_arr = array();
+
+
+    while($row = $result->fetch(PDO::FETCH_ASSOC)) {
+      extract($row);
+
+      $post_item = array(
+        'id' => $id,
+        'title' => $title,
+        'body' => html_entity_decode($body),
+        'author' => $author,
+        'category_id' => $category_id,
+        'category_name' => $category_name
+      );
+
+     
+      array_push($posts_arr, $post_item);
+      
+    }
+
+  
+    echo json_encode($posts_arr);
+
   } else {
+    
     echo json_encode(
-      array('message' => 'Post Not Created')
+      array('message' => 'No Posts Found')
     );
   }
-?>
+  ?>
